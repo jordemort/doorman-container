@@ -1,4 +1,0 @@
-#!/usr/bin/bash
-set -euo pipefail
-
-exec evilwm -fn fixed

@@ -36,19 +36,15 @@ COPY --from=qodem /usr/local /usr/local
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         dumb-init \
-        evilwm \
         gnupg \
         less \
+        libslang2 \
         locales \
         nano \
         net-tools \
         socat \
         software-properties-common \
-        tigervnc-standalone-server \
-        tigervnc-tools \
-        x11-utils \
-        xfonts-base \
-        xfonts-scalable && \
+        tmux && \
     add-apt-repository ppa:dosemu2/ppa && \
     apt-get update && \
     apt-get install -y dosemu2 && \
@@ -70,14 +66,9 @@ ENV USER=${USERNAME} SHELL=/bin/bash
 
 RUN dosemu -dumb /usr/share/dosemu2-extras/bat/insfdusr.bat
 RUN TERM=xterm qodem -x /bin/true
-RUN mkdir -p /home/${USERNAME}/.vnc
 
 COPY --chown=${USERNAME}:${USERNAME} dosemurc /home/${USERNAME}/.dosemu/dosemurc
-COPY --chown=${USERNAME}:${USERNAME} Xtigervnc-session /home/${USERNAME}/.vnc/Xtigervnc-session
-
-COPY wait-for-launch.sh /usr/local/bin
-COPY launch.sh /usr/local/bin
-COPY sysop-cmd.sh /usr/local/bin
+COPY bin/* /usr/local/bin/
 
 USER root
 
