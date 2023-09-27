@@ -32,7 +32,7 @@ tty | socat - UNIX-CONNECT:/mnt/doorman/pts
 
 dosemu_pid=$(timeout 60 pidof-dosemu.sh || true)
 if [ -z "$dosemu_pid" ]; then
-  echo "dosemu never started?" >&2
+  echo "ERROR: dosemu never started?" >&2
   exit 1
 fi
 

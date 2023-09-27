@@ -83,7 +83,7 @@ tmux -S /mnt/doorman/tmux -S /mnt/doorman/tmux new-session -s dosemu -d -- \
 
 dosemu_pid=$(timeout 60 pidof-dosemu.sh || true)
 if [ -z "$dosemu_pid" ]; then
-  echo "dosemu never started?" >&2
+  echo "ERROR: dosemu never started?" >&2
   exit 1
 fi
 
