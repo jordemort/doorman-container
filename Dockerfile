@@ -77,5 +77,13 @@ COPY --chown=${USERNAME}:${USERNAME} Xtigervnc-session /home/${USERNAME}/.vnc/Xt
 
 COPY wait-for-launch.sh /usr/local/bin
 COPY launch.sh /usr/local/bin
+COPY sysop-cmd.sh /usr/local/bin
+
+USER root
+
+RUN ln -s /usr/local/bin/sysop-cmd.sh /usr/local/bin/configure.sh && \
+    ln -s /usr/local/bin/sysop-cmd.sh /usr/local/bin/nightly.sh
+
+USER ${USERNAME}
 
 ENTRYPOINT [ "/usr/bin/dumb-init" ]

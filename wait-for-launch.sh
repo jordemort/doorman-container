@@ -23,6 +23,32 @@ if [ ! -e /mnt/doorman/DOOR.SYS ] ; then
   exit 1
 fi
 
+if [ ! -e /mnt/door.lock ] ; then
+  echo "ERROR: /mnt/door.lock does not exist" >&2
+  exit 1
+fi
+
+echo "Aquiring shared lock on door..."
+
+exec 99>/mnt/door.lock
+if ! flock -sn 99 ; then
+  echo "ERROR: Couldn't get shared lock on /mnt/door.lock" >&2
+  exit 1
+fi
+
+if [ ! -e /mnt/node.lock ] ; then
+  echo "ERROR: /mnt/node.lock does not exist" >&2
+  exit 1
+fi
+
+echo "Aquiring exclusive lock on node..."
+
+exec 98>/mnt/node.lock
+if ! flock -w 60 -x 98 ; then
+  echo "ERROR: Couldn't get exclusive lock on /mnt/node.lock" >&2
+  exit 1
+fi
+
 cleanup() {
   rm -f /mnt/doorman/pts
 
