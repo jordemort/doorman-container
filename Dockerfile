@@ -31,7 +31,7 @@ FROM ubuntu:22.04 AS fixuid
 
 ARG FIXUID_VERSION
 
-ADD https://github.com/boxboat/fixuid/releases/download/v0.6.0/fixuid-0.6.0-linux-amd64.tar.gz /usr/src/fixuid.tar.gz
+ADD https://github.com/boxboat/fixuid/releases/download/v${FIXUID_VERSION}/fixuid-${FIXUID_VERSION}-linux-amd64.tar.gz /usr/src/fixuid.tar.gz
 
 RUN tar -C /usr/local/bin -xzvf /usr/src/fixuid.tar.gz
 
