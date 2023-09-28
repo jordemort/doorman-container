@@ -1,28 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# sanity checks
-
-if [ ! -d /mnt/doorman ]; then
-  echo "ERROR: /mnt/doorman is not a directory" >&2
-  exit 1
-fi
-
-if [ ! -d /mnt/door ]; then
-  echo "ERROR: /mnt/door is not a directory" >&2
-  exit 1
-fi
-
-if [ ! -e /mnt/doorman/DOORMAN.BAT ]; then
-  echo "ERROR: /mnt/doorman/DOORMAN.BAT does not exist" >&2
-  exit 1
-fi
-
-if [ ! -e /mnt/door.lock ]; then
-  echo "ERROR: /mnt/door.lock does not exist" >&2
-  exit 1
-fi
-
 echo "Aquiring exclusive lock on door..."
 
 exec 99>/mnt/door.lock

@@ -1,7 +1,7 @@
-ARG USERNAME=doorman
-ARG USER_UID=1000
+ARG USER_UID=1995
 ARG USER_GID=$USER_UID
 ARG QODEM_VERSION=1.0.1
+ARG FIXUID_VERSION=0.6.0
 
 ##########
 
@@ -24,6 +24,16 @@ WORKDIR /usr/src/qodem-${QODEM_VERSION}
 RUN ./configure --prefix=/usr/local --disable-sdl --disable-x11 --disable-ssh --disable-upnp --disable-gpm && \
     make && \
     make install
+
+##########
+
+FROM ubuntu:22.04 AS fixuid
+
+ARG FIXUID_VERSION
+
+ADD https://github.com/boxboat/fixuid/releases/download/v0.6.0/fixuid-0.6.0-linux-amd64.tar.gz /usr/src/fixuid.tar.gz
+
+RUN tar -C /usr/local/bin -xzvf /usr/src/fixuid.tar.gz
 
 ##########
 
@@ -55,26 +65,33 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
 
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 
-ARG USERNAME USER_UID USER_GID
+ARG USER_UID USER_GID
 
-RUN groupadd -g ${USER_GID} ${USERNAME} && useradd -m -u ${USER_UID} -g ${USERNAME} -s /bin/bash ${USERNAME}
-RUN mkdir /var/run/user/${USER_UID} && chown ${USERNAME}:${USERNAME} /var/run/user/${USER_UID}
+RUN groupadd -g ${USER_GID} doorman && useradd -m -u ${USER_UID} -g doorman -s /bin/bash doorman
+RUN mkdir /var/run/user/${USER_UID} && chown doorman:doorman /var/run/user/${USER_UID}
 
-USER ${USERNAME}
-WORKDIR /home/${USERNAME}
-ENV USER=${USERNAME} SHELL=/bin/bash
+USER doorman
+WORKDIR /home/doorman
+ENV SHELL=/bin/bash
 
 RUN dosemu -dumb /usr/share/dosemu2-extras/bat/insfdusr.bat
 RUN TERM=xterm qodem -x /bin/true
 
-COPY --chown=${USERNAME}:${USERNAME} dosemurc /home/${USERNAME}/.dosemu/dosemurc
-COPY bin/* /usr/local/bin/
+COPY --chown=doorman:doorman dosemurc /home/doorman/.dosemu/dosemurc
 
 USER root
+
+COPY --from=fixuid /usr/local/bin/fixuid /usr/local/bin/fixuid
+
+RUN chown root:root /usr/local/bin/fixuid && \
+    chmod 4755 /usr/local/bin/fixuid
+
+COPY fixuid-config.yml /etc/fixuid/config.yml
+COPY bin/* /usr/local/bin/
 
 RUN ln -s /usr/local/bin/sysop-cmd.sh /usr/local/bin/configure.sh && \
     ln -s /usr/local/bin/sysop-cmd.sh /usr/local/bin/nightly.sh
 
-USER ${USERNAME}
+USER doorman
 
-ENTRYPOINT [ "/usr/bin/dumb-init" ]
+ENTRYPOINT [ "/usr/bin/dumb-init", "/usr/local/bin/fixuid", "-q", "--", "/usr/local/bin/entrypoint.sh" ]
