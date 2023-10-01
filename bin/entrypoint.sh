@@ -34,4 +34,8 @@ if [ -z "${DOORMAN_SKIP_SANITY_CHECKS:-}" ]; then
   fi
 fi
 
+export LOGNAME=doorman
+export USER=doorman
+export HOME=/home/doorman
+
 exec "$@"
