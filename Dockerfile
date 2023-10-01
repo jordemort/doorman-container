@@ -3,7 +3,9 @@ ARG USER_GID=$USER_UID
 ARG QODEM_VERSION=1.0.1
 ARG FIXUID_VERSION=0.6.0
 
-##########
+########################################################################
+# qodem
+########################################################################
 
 FROM ubuntu:22.04 AS qodem
 
@@ -25,7 +27,9 @@ RUN ./configure --prefix=/usr/local --disable-sdl --disable-x11 --disable-ssh --
     make && \
     make install
 
-##########
+########################################################################
+# fixuid
+########################################################################
 
 FROM ubuntu:22.04 AS fixuid
 
@@ -35,7 +39,9 @@ ADD https://github.com/boxboat/fixuid/releases/download/v${FIXUID_VERSION}/fixui
 
 RUN tar -C /usr/local/bin -xzvf /usr/src/fixuid.tar.gz
 
-##########
+########################################################################
+# doorman
+########################################################################
 
 FROM ubuntu:22.04 AS doorman
 
@@ -65,6 +71,11 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
 
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 
+COPY --from=fixuid /usr/local/bin/fixuid /usr/local/bin/fixuid
+
+RUN chown root:root /usr/local/bin/fixuid && \
+    chmod 4755 /usr/local/bin/fixuid
+
 ARG USER_UID USER_GID
 
 RUN groupadd -g ${USER_GID} doorman && useradd -m -u ${USER_UID} -g doorman -s /bin/bash doorman
@@ -72,19 +83,14 @@ RUN mkdir /var/run/user/${USER_UID} && chown doorman:doorman /var/run/user/${USE
 
 USER doorman
 WORKDIR /home/doorman
-ENV SHELL=/bin/bash
+ENV USER=doorman SHELL=/bin/bash HOME=/home/doorman
 
 RUN dosemu -dumb /usr/share/dosemu2-extras/bat/insfdusr.bat
-RUN TERM=xterm qodem -x /bin/true
+RUN mkdir -p qodem/host .qodem/script && TERM=xterm qodem -x /bin/true
 
 COPY --chown=doorman:doorman dosemurc /home/doorman/.dosemu/dosemurc
 
 USER root
-
-COPY --from=fixuid /usr/local/bin/fixuid /usr/local/bin/fixuid
-
-RUN chown root:root /usr/local/bin/fixuid && \
-    chmod 4755 /usr/local/bin/fixuid
 
 COPY fixuid-config.yml /etc/fixuid/config.yml
 COPY bin/* /usr/local/bin/
